@@ -1,16 +1,21 @@
-const SHA256 = require('crypto-js/sha256');
+const crypto = require('crypto');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
+const debug = require('debug')('powcoin:blockchain');
 
 class Transaction {
   constructor(fromAddress, toAddress, amount) {
     this.fromAddress = fromAddress;
     this.toAddress = toAddress;
     this.amount = amount;
+    this.timestamp = Date.now();
   }
 
   calculateHash() {
-    return SHA256(this.fromAddress + this.toAddress + this.amount).toString();
+    return crypto
+      .createHash('sha256')
+      .update(this.fromAddress + this.toAddress + this.amount + this.timestamp)
+      .digest('hex');
   }
 
   signTransaction(signingKey) {
@@ -20,6 +25,7 @@ class Transaction {
 
     const hashTx = this.calculateHash();
     const sig = signingKey.sign(hashTx, 'base64');
+
     this.signature = sig.toDER('hex');
   }
 
@@ -45,12 +51,15 @@ class Block {
   }
 
   calculateHash() {
-    return SHA256(
-      this.previousHash +
-        this.timestamp +
-        JSON.stringify(this.data) +
-        this.nonce
-    ).toString();
+    return crypto
+      .createHash('sha256')
+      .update(
+        this.previousHash +
+          this.timestamp +
+          JSON.stringify(this.data) +
+          this.nonce
+      )
+      .digest('hex');
   }
 
   mineBlock(difficulty) {
@@ -84,7 +93,7 @@ class Blockchain {
   }
 
   createGenesisBlock() {
-    return new Block('01/01/2021', 'Genesis block', 0);
+    return new Block(Date.parse('2017-01-01'), [], '0');
   }
 
   getLatestBlock() {
@@ -121,7 +130,18 @@ class Blockchain {
       throw new Error('Cannot add inalid transaction to the chain');
     }
 
+    if (transaction.amount <= 0) {
+      throw new Error('Transaction amount should be higher than 0');
+    }
+
+    if (
+      this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
+    ) {
+      throw new Error('Not enough balance');
+    }
+
     this.pendingTransations.push(transaction);
+    debug('transaction added: %s', transaction);
   }
 
   getBalanceOfAddress(address) {
@@ -136,10 +156,33 @@ class Blockchain {
         }
       }
     }
+
+    debug('getBalanceOfAdrees: %s', balance);
     return balance;
   }
 
+  getAllTransactionsForWallet(address) {
+    const txs = [];
+
+    for (const block of this.chain) {
+      for (const tx of block.transactions) {
+        if (tx.fromAddress === address || tx.toAddress === address) {
+          txs.push(tx);
+        }
+      }
+    }
+
+    debug('get transactions for wallet count: %s', txs.length);
+    return txs;
+  }
+
   isChainValid() {
+    const realGenesis = JSON.stringify(this.createGenesisBlock());
+
+    if (realGenesis !== JSON.stringify(this.chain[0])) {
+      return false;
+    }
+
     for (let i = 1; i < this.chain.length; i++) {
       const currentBlock = this.chain[i];
       const previousBlock = this.chain[i - 1];
@@ -162,4 +205,5 @@ class Blockchain {
 }
 
 module.exports.Blockchain = Blockchain;
+module.exports.Block = Block;
 module.exports.Transaction = Transaction;
