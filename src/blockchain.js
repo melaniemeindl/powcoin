@@ -1,7 +1,7 @@
-const crypto = require('crypto');
+const debug = require('debug')('powcoin:blockchain');
+const SHA256 = require('crypto-js/sha256');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
-const debug = require('debug')('powcoin:blockchain');
 
 class Transaction {
   constructor(fromAddress, toAddress, amount) {
@@ -12,10 +12,9 @@ class Transaction {
   }
 
   calculateHash() {
-    return crypto
-      .createHash('sha256')
-      .update(this.fromAddress + this.toAddress + this.amount + this.timestamp)
-      .digest('hex');
+    return SHA256(
+      this.fromAddress + this.toAddress + this.amount + this.timestamp
+    ).toString();
   }
 
   signTransaction(signingKey) {
@@ -51,15 +50,12 @@ class Block {
   }
 
   calculateHash() {
-    return crypto
-      .createHash('sha256')
-      .update(
-        this.previousHash +
-          this.timestamp +
-          JSON.stringify(this.data) +
-          this.nonce
-      )
-      .digest('hex');
+    return SHA256(
+      this.previousHash +
+        this.timestamp +
+        JSON.stringify(this.data) +
+        this.nonce
+    ).toString();
   }
 
   mineBlock(difficulty) {
