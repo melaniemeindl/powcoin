@@ -84,7 +84,7 @@ class Blockchain {
   constructor() {
     this.chain = [this.createGenesisBlock()];
     this.difficulty = 2;
-    this.pendingTransations = [];
+    this.pendingTransactions = [];
     this.miningReward = 100;
   }
 
@@ -102,11 +102,11 @@ class Blockchain {
       miningRewardAddress,
       this.miningReward
     );
-    this.pendingTransations.push(rewardTx);
+    this.pendingTransactions.push(rewardTx);
 
     let block = new Block(
       Date.now(),
-      this.pendingTransations,
+      this.pendingTransactions,
       this.getLatestBlock().hash
     );
     block.mineBlock(this.difficulty);
@@ -114,7 +114,7 @@ class Blockchain {
     console.log('Block successfully mined!');
     this.chain.push(block);
 
-    this.pendingTransations = [];
+    this.pendingTransactions = [];
   }
 
   addTransaction(transaction) {
@@ -136,7 +136,7 @@ class Blockchain {
     //   throw new Error('Not enough balance');
     // }
 
-    this.pendingTransations.push(transaction);
+    this.pendingTransactions.push(transaction);
     debug('transaction added: %s', transaction);
   }
 
