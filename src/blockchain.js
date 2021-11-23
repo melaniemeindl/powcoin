@@ -130,11 +130,11 @@ class Blockchain {
       throw new Error('Transaction amount should be higher than 0');
     }
 
-    if (
-      this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
-    ) {
-      throw new Error('Not enough balance');
-    }
+    // if (
+    //   this.getBalanceOfAddress(transaction.fromAddress) < transaction.amount
+    // ) {
+    //   throw new Error('Not enough balance');
+    // }
 
     this.pendingTransations.push(transaction);
     debug('transaction added: %s', transaction);
