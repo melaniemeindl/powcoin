@@ -1,4 +1,5 @@
-const { Blockchain, Transaction } = require('./blockchain');
+const { Blockchain } = require('./blockchain');
+const { Transaction } = require('./transaction');
 const EC = require('elliptic').ec;
 const ec = new EC('secp256k1');
 
@@ -32,7 +33,6 @@ powCoin.addTransaction(tx2);
 // Mine block
 powCoin.minePendingTransactions(myWalletAddress);
 
-console.log();
 console.log(
   `Balance of xavier is ${powCoin.getBalanceOfAddress(myWalletAddress)}`
 );
